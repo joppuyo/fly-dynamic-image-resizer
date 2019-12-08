@@ -284,8 +284,11 @@ class Core {
 				$temp_name      = wp_generate_uuid4();
 				$temp_directory = get_temp_dir();
 				$temp_path      = $temp_directory . $temp_name;
-				$image          = file_get_contents( wp_get_attachment_url( $attachment_id ) );
-				$result         = @file_put_contents( $temp_path, $image );
+				$image          = @file_get_contents( wp_get_attachment_url( $attachment_id ) );
+				if ( false === $image ) {
+					return array();
+				}
+				$result = @file_put_contents( $temp_path, $image );
 				if ( false === $result ) {
 					return array();
 				}
