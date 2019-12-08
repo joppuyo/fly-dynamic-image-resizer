@@ -276,6 +276,22 @@ class Core {
 
 			// Get WP Image Editor Instance
 			$image_path   = get_attached_file( $attachment_id );
+
+			$temp_path = null;
+
+			// If file doesn't exist locally, try to fetch it from remote location
+			if ( ! file_exists( $image_path ) ) {
+				$temp_name      = wp_generate_uuid4();
+				$temp_directory = get_temp_dir();
+				$temp_path      = $temp_directory . $temp_name;
+				$image          = file_get_contents( wp_get_attachment_url( $attachment_id ) );
+				$result         = @file_put_contents( $temp_path, $image );
+				if ( false === $result ) {
+					return [];
+				}
+				$image_path = $temp_path;
+			}
+
 			$image_editor = wp_get_image_editor( $image_path );
 			if ( ! is_wp_error( $image_editor ) ) {
 				// Create new image
@@ -285,6 +301,10 @@ class Core {
 				// Trigger action
 				do_action( 'fly_image_created', $attachment_id, $fly_file_path );
 
+				if ( $temp_path ) {
+					unlink( $temp_path );
+				}
+
 				// Image created, return its data
 				$image_dimensions = $image_editor->get_size();
 				return array(
@@ -292,6 +312,9 @@ class Core {
 					'width'  => $image_dimensions['width'],
 					'height' => $image_dimensions['height'],
 				);
+			}
+			if ( $temp_path ) {
+				unlink( $temp_path );
 			}
 		}
 
