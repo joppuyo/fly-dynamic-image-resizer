@@ -274,9 +274,7 @@ class Core {
 			// File does not exist, lets check if directory exists
 			$this->check_fly_dir();
 
-			// Get WP Image Editor Instance
 			$image_path   = get_attached_file( $attachment_id );
-
 			$temp_path = null;
 
 			// If file doesn't exist locally, try to fetch it from remote location
@@ -295,6 +293,7 @@ class Core {
 				$image_path = $temp_path;
 			}
 
+			// Get WP Image Editor Instance
 			$image_editor = wp_get_image_editor( $image_path );
 			if ( ! is_wp_error( $image_editor ) ) {
 				// Create new image
