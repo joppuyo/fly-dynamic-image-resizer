@@ -282,6 +282,7 @@ class Core {
 			$this->check_fly_dir();
 
 			$image_path = get_attached_file( $attachment_id );
+			$image_path = apply_filters( 'fly_attachment_path', $image_path, $attachment_id );
 			$temp_path  = null;
 
 			// If file doesn't exist locally, try to fetch it from remote location
