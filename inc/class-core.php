@@ -287,7 +287,7 @@ class Core {
 				$image          = file_get_contents( wp_get_attachment_url( $attachment_id ) );
 				$result         = @file_put_contents( $temp_path, $image );
 				if ( false === $result ) {
-					return [];
+					return array();
 				}
 				$image_path = $temp_path;
 			}
