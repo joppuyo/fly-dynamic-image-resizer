@@ -10,6 +10,7 @@ class Core {
 	private $_image_sizes     = array();
 	private $_fly_dir         = '';
 	private $_capability      = 'manage_options';
+	private $_temp_files      = array();
 
 	/**
 	 * Get current instance.
@@ -38,6 +39,12 @@ class Core {
 		add_action( 'delete_attachment', array( $this, 'delete_attachment_fly_images' ) );
 
 		add_action( 'switch_blog', array( $this, 'blog_switched' ) );
+	}
+
+	function __destruct() {
+		foreach ($this->_temp_files as $temp_file) {
+			unlink($temp_file);
+		}
 	}
 
 	/**
@@ -274,23 +281,26 @@ class Core {
 			// File does not exist, lets check if directory exists
 			$this->check_fly_dir();
 
-			$image_path   = get_attached_file( $attachment_id );
-			$temp_path = null;
+			$image_path = get_attached_file( $attachment_id );
+			$temp_path  = null;
 
 			// If file doesn't exist locally, try to fetch it from remote location
 			if ( ! file_exists( $image_path ) ) {
-				$temp_name      = wp_generate_uuid4();
-				$temp_directory = get_temp_dir();
-				$temp_path      = $temp_directory . $temp_name;
-				$image          = @file_get_contents( wp_get_attachment_url( $attachment_id ) );
-				if ( false === $image ) {
-					return array();
+				if (!array_key_exists($attachment_id, $this->_temp_files)) {
+					$temp_name      = wp_generate_uuid4();
+					$temp_directory = get_temp_dir();
+					$temp_path      = $temp_directory . $temp_name;
+					$image          = @file_get_contents( wp_get_attachment_url( $attachment_id ) );
+					if ( false === $image ) {
+						return array();
+					}
+					$result = @file_put_contents( $temp_path, $image );
+					if ( false === $result ) {
+						return array();
+					}
+					$this->_temp_files[$attachment_id] = $temp_path;
 				}
-				$result = @file_put_contents( $temp_path, $image );
-				if ( false === $result ) {
-					return array();
-				}
-				$image_path = $temp_path;
+				$image_path = $this->_temp_files[$attachment_id];
 			}
 
 			// Get WP Image Editor Instance
@@ -303,10 +313,6 @@ class Core {
 				// Trigger action
 				do_action( 'fly_image_created', $attachment_id, $fly_file_path );
 
-				if ( $temp_path ) {
-					unlink( $temp_path );
-				}
-
 				// Image created, return its data
 				$image_dimensions = $image_editor->get_size();
 				return array(
@@ -314,9 +320,6 @@ class Core {
 					'width'  => $image_dimensions['width'],
 					'height' => $image_dimensions['height'],
 				);
-			}
-			if ( $temp_path ) {
-				unlink( $temp_path );
 			}
 		}
 
