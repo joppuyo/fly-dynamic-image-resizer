@@ -1,4 +1,5 @@
 {
   "name" : "joppuyo/fly-dynamic-image-resizer",
-  "description" : "Fly Dynamic Image Resizer"
+  "description" : "Fly Dynamic Image Resizer",
+  "type": "wordpress-plugin"
 }
