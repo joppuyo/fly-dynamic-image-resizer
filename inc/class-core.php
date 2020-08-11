@@ -31,6 +31,8 @@ class Core {
 	public function init() {
 		$this->_fly_dir    = apply_filters( 'fly_dir_path', $this->get_fly_dir() );
 		$this->_capability = apply_filters( 'fly_images_user_capability', $this->_capability );
+		$this->_temp_files = get_option( 'fly_temp_files', [] );
+		$this->cleanup_temp_files();
 
 		$this->check_fly_dir();
 
@@ -41,10 +43,11 @@ class Core {
 		add_action( 'switch_blog', array( $this, 'blog_switched' ) );
 	}
 
-	function __destruct() {
+	function cleanup_temp_files() {
 		foreach ($this->_temp_files as $temp_file) {
-			unlink($temp_file);
+			@unlink($temp_file);
 		}
+		delete_option('fly_temp_files');
 	}
 
 	/**
@@ -299,6 +302,7 @@ class Core {
 						return array();
 					}
 					$this->_temp_files[$attachment_id] = $temp_path;
+					update_option('fly_temp_files', $this->_temp_files);
 				}
 				$image_path = $this->_temp_files[$attachment_id];
 			}
